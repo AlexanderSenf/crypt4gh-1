@@ -40,16 +40,16 @@ class Crypt4GHUtils {
         File pubFile = new File(keyName + ".pub.pem");
         if (!pubFile.exists() || pubFile.exists() &&
                 consoleUtils.promptForConfirmation("Public key file already exists: do you want to overwrite it?")) {
-            if (Format.CRYPT4GH.name().equalsIgnoreCase(keyFormat)) {
+//            if (Format.CRYPT4GH.name().equalsIgnoreCase(keyFormat)) {
                 keyUtils.writeCrypt4GHKey(pubFile, keyPair.getPublic(), null);
-            } else {
-                keyUtils.writeOpenSSLKey(pubFile, keyPair.getPublic());
-            }
+//            } else {
+//                keyUtils.writeOpenSSLKey(pubFile, keyPair.getPublic());
+//            }
         }
         File secFile = new File(keyName + ".sec.pem");
         if (!secFile.exists() || secFile.exists() &&
                 consoleUtils.promptForConfirmation("Private key file already exists: do you want to overwrite it?")) {
-            if (Format.CRYPT4GH.name().equalsIgnoreCase(keyFormat)) {
+//            if (Format.CRYPT4GH.name().equalsIgnoreCase(keyFormat)) {
                 char[] password;
                 if (StringUtils.isEmpty(keyPassword)) {
                     password = consoleUtils.readPassword("Password for the private key: ", 4);
@@ -61,9 +61,9 @@ class Crypt4GHUtils {
                     }
                 }
                 keyUtils.writeCrypt4GHKey(secFile, keyPair.getPrivate(), password);
-            } else {
-                keyUtils.writeOpenSSLKey(secFile, keyPair.getPrivate());
-            }
+//            } else {
+//                keyUtils.writeOpenSSLKey(secFile, keyPair.getPrivate());
+//            }
         }
         Set<PosixFilePermission> perms = new HashSet<>();
         perms.add(PosixFilePermission.OWNER_READ);

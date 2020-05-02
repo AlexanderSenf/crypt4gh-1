@@ -348,6 +348,7 @@ public class KeyUtils {
      * @param key     Key to write.
      * @throws IOException If the file can't be written.
      */
+/*    
     public void writeOpenSSLKey(File keyFile, Key key) throws IOException {
         Collection<String> keyLines = new ArrayList<>();
         boolean isPublic = key instanceof PublicKey;
@@ -364,7 +365,7 @@ public class KeyUtils {
         }
         FileUtils.writeLines(keyFile, keyLines);
     }
-
+*/
     /**
      * Writes the key to a file in Crypt4GH format.
      *
