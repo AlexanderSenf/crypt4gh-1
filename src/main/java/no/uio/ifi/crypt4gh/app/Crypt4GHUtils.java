@@ -73,13 +73,13 @@ class Crypt4GHUtils {
         Files.setPosixFilePermissions(secFile.toPath(), perms);
     }
 
-    void encryptFile(String dataFilePath, String privateKeyFilePath, String publicKeyFilePath) throws IOException, GeneralSecurityException {
+    void encryptFile(String dataFilePath, String privateKeyFilePath, String publicKeyFilePath, String keyKey) throws IOException, GeneralSecurityException {
         File dataInFile = new File(dataFilePath);
         File dataOutFile = new File(dataFilePath + ".enc");
         if (dataOutFile.exists() && !ConsoleUtils.getInstance().promptForConfirmation(dataOutFile.getAbsolutePath() + " already exists. Overwrite?")) {
             return;
         }
-        PrivateKey privateKey = readPrivateKey(privateKeyFilePath);
+        PrivateKey privateKey = readPrivateKey(privateKeyFilePath, keyKey);
         PublicKey publicKey = keyUtils.readPublicKey(new File(publicKeyFilePath));
         try (InputStream inputStream = new FileInputStream(dataInFile);
              OutputStream outputStream = new FileOutputStream(dataOutFile);
@@ -93,13 +93,13 @@ class Crypt4GHUtils {
         }
     }
 
-    void decryptFile(String dataFilePath, String privateKeyFilePath) throws IOException, GeneralSecurityException {
+    void decryptFile(String dataFilePath, String privateKeyFilePath, String keyKey) throws IOException, GeneralSecurityException {
         File dataInFile = new File(dataFilePath);
         File dataOutFile = new File(dataFilePath + ".dec");
         if (dataOutFile.exists() && !ConsoleUtils.getInstance().promptForConfirmation(dataOutFile.getAbsolutePath() + " already exists. Overwrite?")) {
             return;
         }
-        PrivateKey privateKey = readPrivateKey(privateKeyFilePath);
+        PrivateKey privateKey = readPrivateKey(privateKeyFilePath, keyKey);
         System.out.println("Decryption initialized...");
         try (FileInputStream inputStream = new FileInputStream(dataInFile);
              OutputStream outputStream = new FileOutputStream(dataOutFile);
@@ -112,12 +112,14 @@ class Crypt4GHUtils {
         }
     }
 
-    private PrivateKey readPrivateKey(String privateKeyFilePath) throws IOException, GeneralSecurityException {
+    private PrivateKey readPrivateKey(String privateKeyFilePath, String keyKey) throws IOException, GeneralSecurityException {
         PrivateKey privateKey;
         try {
             privateKey = keyUtils.readPrivateKey(new File(privateKeyFilePath), null);
         } catch (IllegalArgumentException e) {
-            char[] password = consoleUtils.readPassword("Password for the private key: ", 4);
+            char[] password = keyKey==null?
+                    consoleUtils.readPassword("Password for the private key: ", 4):
+                    keyKey.toCharArray();
             privateKey = keyUtils.readPrivateKey(new File(privateKeyFilePath), password);
         }
         return privateKey;

@@ -10,6 +10,7 @@ public class Main {
     public static final String GENERATE = "g";
     public static final String ENCRYPT = "e";
     public static final String DECRYPT = "d";
+    public static final String KEYKEY = "kk";
     public static final String KEY_FORMAT = "kf";
     public static final String KEY_PASSWORD = "kp";
     public static final String PUBLIC_KEY = "pk";
@@ -39,6 +40,7 @@ public class Main {
         options.addOption(new Option(KEY_PASSWORD, "keypass", true, "password for Crypt4GH private key (will be prompted afterwords if skipped)"));
         options.addOption(new Option(PUBLIC_KEY, "pubkey", true, "public key to use (specify key file)"));
         options.addOption(new Option(SECRET_KEY, "seckey", true, "secret key to use (specify key file)"));
+        options.addOption(new Option(KEYKEY, "keykey", true, "key for key file"));
 
         CommandLineParser parser = new DefaultParser();
         Crypt4GHUtils crypt4GHUtils = Crypt4GHUtils.getInstance();
@@ -64,19 +66,29 @@ public class Main {
                         System.err.println("Missing argument for option: " + SECRET_KEY);
                         return;
                     }
+                    String keykey = null;
+                    if (line.hasOption(KEYKEY)) {
+                        keykey = line.getOptionValue(KEYKEY);
+                    }
                     crypt4GHUtils.encryptFile(
                             line.getOptionValue(ENCRYPT),
                             line.getOptionValue(SECRET_KEY),
-                            line.getOptionValue(PUBLIC_KEY)
+                            line.getOptionValue(PUBLIC_KEY),
+                            keykey
                     );
                 } else if (line.hasOption(DECRYPT)) {
                     if (!line.hasOption(SECRET_KEY)) {
                         System.err.println("Missing argument for option: " + SECRET_KEY);
                         return;
                     }
+                    String keykey = null;
+                    if (line.hasOption(KEYKEY)) {
+                        keykey = line.getOptionValue(KEYKEY);
+                    }
                     crypt4GHUtils.decryptFile(
                             line.getOptionValue(DECRYPT),
-                            line.getOptionValue(SECRET_KEY)
+                            line.getOptionValue(SECRET_KEY),
+                            keykey
                     );
                 }
             }
