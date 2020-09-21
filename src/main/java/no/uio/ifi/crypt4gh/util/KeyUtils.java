@@ -46,6 +46,8 @@ public class KeyUtils {
     public static final String END_PRIVATE_KEY = "-----END PRIVATE KEY-----";
     public static final String BEGIN_CRYPT4GH_PUBLIC_KEY = "-----BEGIN CRYPT4GH PUBLIC KEY-----";
     public static final String END_CRYPT4GH_PUBLIC_KEY = "-----END CRYPT4GH PUBLIC KEY-----";
+    public static final String BEGIN_CRYPT4GH_PRIVATE_KEY = "-----BEGIN CRYPT4GH PRIVATE KEY-----";
+    public static final String END_CRYPT4GH_PRIVATE_KEY = "-----END CRYPT4GH PRIVATE KEY-----";
     public static final String BEGIN_CRYPT4GH_ENCRYPTED_PRIVATE_KEY = "-----BEGIN CRYPT4GH ENCRYPTED PRIVATE KEY-----";
     public static final String END_CRYPT4GH_ENCRYPTED_PRIVATE_KEY = "-----END CRYPT4GH ENCRYPTED PRIVATE KEY-----";
 
@@ -382,6 +384,10 @@ public class KeyUtils {
             keyLines.add(BEGIN_CRYPT4GH_PUBLIC_KEY);
             keyLines.add(Base64.getEncoder().encodeToString(encodedKey));
             keyLines.add(END_CRYPT4GH_PUBLIC_KEY);
+        } else if (password==null) {
+            keyLines.add(BEGIN_CRYPT4GH_PRIVATE_KEY);
+            keyLines.add(Base64.getEncoder().encodeToString(encodedKey));
+            keyLines.add(END_CRYPT4GH_PRIVATE_KEY);            
         } else {
             byte[] salt = new byte[SALT_LENGTH];
             SecureRandom.getInstanceStrong().nextBytes(salt);
