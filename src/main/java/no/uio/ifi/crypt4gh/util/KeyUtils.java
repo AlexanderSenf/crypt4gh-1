@@ -255,6 +255,15 @@ public class KeyUtils {
             return constructPublicKey(decodedKey);
         }
     }
+    public PrivateKey readPrivateKey(String keyMaterial) throws GeneralSecurityException {
+        KeyFactory keyFactory = KeyFactory.getInstance(X25519);
+        byte[] decodedKey = decodeKey(keyMaterial);
+        try {
+            return keyFactory.generatePrivate(new X509EncodedKeySpec(decodedKey));
+        } catch (InvalidKeySpecException e) {
+            return constructPrivateKey(decodedKey);
+        }
+    }
 
     /**
      * Reads private key (OpenSSL or Crypt4GH format) file.
@@ -299,37 +308,41 @@ public class KeyUtils {
      * @throws IllegalArgumentException If the key is password-protected, but the password was <code>null</code>.
      */
     public PrivateKey readCrypt4GHPrivateKey(byte[] keyMaterial, char[] password) throws GeneralSecurityException, IllegalArgumentException {
-        ByteBuffer byteBuffer = ByteBuffer.wrap(keyMaterial).order(ByteOrder.BIG_ENDIAN);
-        byteBuffer.get(new byte[CRYPT4GH_AUTH_MAGIC.length()]);
-        KDF kdf = KDF.valueOf(decodeString(byteBuffer).toUpperCase());
-        int rounds = 0;
-        byte[] salt = new byte[0];
-        if (kdf != KDF.NONE) {
-            if (password == null) {
-                throw new IllegalArgumentException("Private key is password-protected, need a password for decryption");
+        if (password==null) {
+            return readPrivateKey(new String(keyMaterial));
+        } else {
+            ByteBuffer byteBuffer = ByteBuffer.wrap(keyMaterial).order(ByteOrder.BIG_ENDIAN);
+            byteBuffer.get(new byte[CRYPT4GH_AUTH_MAGIC.length()]);
+            KDF kdf = KDF.valueOf(decodeString(byteBuffer).toUpperCase());
+            int rounds = 0;
+            byte[] salt = new byte[0];
+            if (kdf != KDF.NONE) {
+                if (password == null) {
+                    throw new IllegalArgumentException("Private key is password-protected, need a password for decryption");
+                }
+                short roundsAndSaltLength = byteBuffer.getShort();
+                int saltLength = roundsAndSaltLength - 4;
+                rounds = byteBuffer.getInt();
+                salt = decodeArray(byteBuffer, saltLength);
             }
-            short roundsAndSaltLength = byteBuffer.getShort();
-            int saltLength = roundsAndSaltLength - 4;
-            rounds = byteBuffer.getInt();
-            salt = decodeArray(byteBuffer, saltLength);
-        }
-        Cipher cipher = Cipher.valueOf(decodeString(byteBuffer).toUpperCase());
-        short keyLength = byteBuffer.getShort();
-        byte[] payload = decodeArray(byteBuffer, keyLength);
-        if (kdf == KDF.NONE) {
-            if (cipher != Cipher.NONE) {
-                throw new GeneralSecurityException("Invalid private key: KDF is 'none', but cipher is not 'none");
+            Cipher cipher = Cipher.valueOf(decodeString(byteBuffer).toUpperCase());
+            short keyLength = byteBuffer.getShort();
+            byte[] payload = decodeArray(byteBuffer, keyLength);
+            if (kdf == KDF.NONE) {
+                if (cipher != Cipher.NONE) {
+                    throw new GeneralSecurityException("Invalid private key: KDF is 'none', but cipher is not 'none");
+                }
+                return constructPrivateKey(payload);
             }
-            return constructPrivateKey(payload);
+            SecretKeySpec derivedKey = new SecretKeySpec(kdf.derive(rounds, password, salt), CHA_CHA_20);
+            Arrays.fill(password, (char) 0);
+            javax.crypto.Cipher decryption = javax.crypto.Cipher.getInstance(CHA_CHA_20_POLY_1305);
+            byte[] nonce = Arrays.copyOfRange(payload, 0, NONCE_SIZE);
+            byte[] key = Arrays.copyOfRange(payload, NONCE_SIZE, payload.length);
+            decryption.init(javax.crypto.Cipher.DECRYPT_MODE, derivedKey, new IvParameterSpec(nonce));
+            byte[] decryptedPayload = decryption.doFinal(key);
+            return constructPrivateKey(decryptedPayload);
         }
-        SecretKeySpec derivedKey = new SecretKeySpec(kdf.derive(rounds, password, salt), CHA_CHA_20);
-        Arrays.fill(password, (char) 0);
-        javax.crypto.Cipher decryption = javax.crypto.Cipher.getInstance(CHA_CHA_20_POLY_1305);
-        byte[] nonce = Arrays.copyOfRange(payload, 0, NONCE_SIZE);
-        byte[] key = Arrays.copyOfRange(payload, NONCE_SIZE, payload.length);
-        decryption.init(javax.crypto.Cipher.DECRYPT_MODE, derivedKey, new IvParameterSpec(nonce));
-        byte[] decryptedPayload = decryption.doFinal(key);
-        return constructPrivateKey(decryptedPayload);
     }
 
     /**
