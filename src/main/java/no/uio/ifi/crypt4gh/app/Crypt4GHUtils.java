@@ -53,6 +53,8 @@ class Crypt4GHUtils {
                 char[] password;
                 if (StringUtils.isEmpty(keyPassword)) {
                     password = consoleUtils.readPassword("Password for the private key: ", 4);
+                } else if (keyPassword.equalsIgnoreCase("null")) {
+                    password = null;
                 } else {
                     if (keyPassword.length() < 4) {
                         password = consoleUtils.readPassword("Password for the private key: ", 4);
