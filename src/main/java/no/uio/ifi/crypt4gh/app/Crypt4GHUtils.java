@@ -75,7 +75,7 @@ class Crypt4GHUtils {
 
     void encryptFile(String dataFilePath, String privateKeyFilePath, String publicKeyFilePath, String keyKey) throws IOException, GeneralSecurityException {
         File dataInFile = new File(dataFilePath);
-        File dataOutFile = new File(dataFilePath + ".enc");
+        File dataOutFile = new File(fileComponent(dataFilePath) + ".enc");
         if (dataOutFile.exists() && !ConsoleUtils.getInstance().promptForConfirmation(dataOutFile.getAbsolutePath() + " already exists. Overwrite?")) {
             return;
         }
@@ -95,7 +95,7 @@ class Crypt4GHUtils {
 
     void decryptFile(String dataFilePath, String privateKeyFilePath, String keyKey) throws IOException, GeneralSecurityException {
         File dataInFile = new File(dataFilePath);
-        File dataOutFile = new File(dataFilePath + ".dec");
+        File dataOutFile = new File(fileComponent(dataFilePath) + ".dec");
         if (dataOutFile.exists() && !ConsoleUtils.getInstance().promptForConfirmation(dataOutFile.getAbsolutePath() + " already exists. Overwrite?")) {
             return;
         }
@@ -125,4 +125,11 @@ class Crypt4GHUtils {
         return privateKey;
     }
 
+    private String fileComponent(String fname) {
+        int pos = fname.lastIndexOf(File.separator);
+        if (pos > -1)
+            return fname.substring(pos + 1);
+        else
+            return fname;
+    }
 }
